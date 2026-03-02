@@ -1,298 +1,211 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Registro de Presença – Aula Prática</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f0f4f8;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 32px 28px;
-      max-width: 480px;
-      width: 100%;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-    }
-    .logo { text-align: center; margin-bottom: 8px; font-size: 2rem; }
-    h1 { text-align: center; font-size: 1.3rem; color: #1a365d; margin-bottom: 4px; }
-    .subtitle { text-align: center; color: #718096; font-size: 0.9rem; margin-bottom: 24px; }
-    .date-badge {
-      background: #ebf8ff;
-      border: 2px solid #90cdf4;
-      border-radius: 10px;
-      padding: 12px 16px;
-      text-align: center;
-      margin-bottom: 24px;
-    }
-    .date-badge .label { font-size: 0.75rem; color: #2b6cb0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .date-badge .value { font-size: 1.4rem; font-weight: 700; color: #1a365d; margin-top: 2px; }
-    .date-badge .turma { font-size: 0.85rem; color: #4a5568; margin-top: 4px; }
-    label { display: block; font-weight: 600; color: #2d3748; margin-bottom: 6px; font-size: 0.9rem; }
-    select {
-      width: 100%;
-      padding: 12px 14px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 1rem;
-      color: #2d3748;
-      background: white;
-      margin-bottom: 20px;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    select:focus { outline: none; border-color: #4299e1; }
-    .field { margin-bottom: 4px; }
-    button[type="submit"] {
-      width: 100%;
-      padding: 14px;
-      background: #3182ce;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s;
-    }
-    button[type="submit"]:hover { background: #2b6cb0; }
-    button[type="submit"]:disabled { background: #a0aec0; cursor: not-allowed; }
-    #msg {
-      margin-top: 20px;
-      padding: 14px;
-      border-radius: 10px;
-      text-align: center;
-      font-weight: 600;
-      display: none;
-    }
-    #msg.success { background: #c6f6d5; color: #276749; border: 2px solid #68d391; }
-    #msg.error   { background: #fed7d7; color: #c53030; border: 2px solid #fc8181; }
-    #msg.warning { background: #fefcbf; color: #744210; border: 2px solid #f6e05e; }
-    .spinner { display: none; text-align: center; margin-top: 12px; color: #718096; }
-    .help { font-size: 0.78rem; color: #a0aec0; margin-top: -14px; margin-bottom: 20px; }
-  </style>
-</head>
-<body>
-<div class="card">
-  <div class="logo">📋</div>
-  <h1>Registro de Presença</h1>
-  <p class="subtitle">Aula Prática – EECA/UFG</p>
+/**
+ * SISTEMA DE REGISTRO DE PRESENÇA – EECA/UFG
+ * Google Apps Script (Web App)
+ *
+ * INSTRUÇÕES PARA ATUALIZAR:
+ * 1. Abra https://script.google.com e entre no seu projeto
+ * 2. Substitua TODO o conteúdo pelo deste arquivo
+ * 3. Salve (Ctrl+S)
+ * 4. Execute UMA VEZ a função "configurarTrigger" (selecione no menu e clique Executar)
+ * 5. Reimplante: Implantar → Gerenciar implantações → editar → Nova versão → Implantar
+ *    (a URL do Web App NÃO muda — os QR codes continuam funcionando)
+ */
 
-  <div class="date-badge" id="date-badge">
-    <div class="label">Data da Aula</div>
-    <div class="value" id="date-display">—</div>
-    <div class="turma" id="turma-display"></div>
-  </div>
+const SPREADSHEET_ID = "https://script.google.com/macros/s/AKfycby6USVz7-lD2SOwLWly58_7bAiC9psLcXo--DkGP2xCOBjsKHBheeNAhFkSyWOeIRj6/exec";
 
-  <div id="form-area">
-    <div class="field">
-      <label for="sel-matricula">Matrícula</label>
-      <select id="sel-matricula">
-        <option value="">— selecione sua matrícula —</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="sel-nome">Nome</label>
-      <select id="sel-nome">
-        <option value="">— confirme seu nome —</option>
-      </select>
-      <p class="help">O nome deve coincidir com a matrícula selecionada acima.</p>
-    </div>
-
-    <button type="submit" id="btn-submit" disabled>Registrar Presença</button>
-  </div>
-
-  <div id="msg"></div>
-  <div class="spinner" id="spinner">Enviando…</div>
-</div>
-
-<script>
-// ─── DADOS DOS ALUNOS (gerado automaticamente) ───────────────────────────────
-const TURMAS = {
-  "turma_1": [
-    {"matricula":"202402786","nome":"ANA LUIZA DA SILVA TEIXEIRA"},
-    {"matricula":"202503053","nome":"BÁRBARA LUIZA CARNEIRO"},
-    {"matricula":"202501117","nome":"EDUARDA SILVA ALVES"},
-    {"matricula":"202503060","nome":"GABRIEL SOARES DO NASCIMENTO MENDES"},
-    {"matricula":"202505619","nome":"GIS LOPES SILVA"},
-    {"matricula":"202503064","nome":"ICARO MENDES DE MORAIS DANNA"},
-    {"matricula":"202501119","nome":"JOAO VITOR CAINAN DE SOUZA"},
-    {"matricula":"202402812","nome":"KELLY CRISTINA LORETO FAGUNDES"},
-    {"matricula":"202402813","nome":"LARISSA SILVEIRA PRADO NASCIMENTO"},
-    {"matricula":"202402814","nome":"LAURA LUIZA PAULA BATISTA"},
-    {"matricula":"202503071","nome":"LUANY DOS SANTOS RAMOS"},
-    {"matricula":"202505620","nome":"MARIA LUIZA LEOPOLDINO LADEIRA"},
-    {"matricula":"202503075","nome":"MURILO ASSUNCAO ACACIO"},
-    {"matricula":"202505926","nome":"OSVALDO DE OLIVEIRA GUIMARAES NETO"},
-    {"matricula":"202503079","nome":"ROBERTA FELIPE GOMES"},
-    {"matricula":"202503081","nome":"SARAH CRISTINA DOS SANTOS"},
-    {"matricula":"202503082","nome":"SOFIA LUNARDI GOMES"},
-    {"matricula":"202505622","nome":"VICTORIA SOUSA MOREIRA"}
+// ─── ALUNOS ───────────────────────────────────────────────────────────────────
+const ALUNOS = {
+  turma_1: [
+    {matricula:"202402786", nome:"ANA LUIZA DA SILVA TEIXEIRA"},
+    {matricula:"202503053", nome:"BÁRBARA LUIZA CARNEIRO"},
+    {matricula:"202501117", nome:"EDUARDA SILVA ALVES"},
+    {matricula:"202503060", nome:"GABRIEL SOARES DO NASCIMENTO MENDES"},
+    {matricula:"202505619", nome:"GIS LOPES SILVA"},
+    {matricula:"202503064", nome:"ICARO MENDES DE MORAIS DANNA"},
+    {matricula:"202501119", nome:"JOAO VITOR CAINAN DE SOUZA"},
+    {matricula:"202402812", nome:"KELLY CRISTINA LORETO FAGUNDES"},
+    {matricula:"202402813", nome:"LARISSA SILVEIRA PRADO NASCIMENTO"},
+    {matricula:"202402814", nome:"LAURA LUIZA PAULA BATISTA"},
+    {matricula:"202503071", nome:"LUANY DOS SANTOS RAMOS"},
+    {matricula:"202505620", nome:"MARIA LUIZA LEOPOLDINO LADEIRA"},
+    {matricula:"202503075", nome:"MURILO ASSUNCAO ACACIO"},
+    {matricula:"202505926", nome:"OSVALDO DE OLIVEIRA GUIMARAES NETO"},
+    {matricula:"202503079", nome:"ROBERTA FELIPE GOMES"},
+    {matricula:"202503081", nome:"SARAH CRISTINA DOS SANTOS"},
+    {matricula:"202503082", nome:"SOFIA LUNARDI GOMES"},
+    {matricula:"202505622", nome:"VICTORIA SOUSA MOREIRA"},
   ],
-  "turma_2": [
-    {"matricula":"202501115","nome":"ANA CLARA ALVES COSTA"},
-    {"matricula":"202505618","nome":"DAVI RODRIGUES MAGALHAES"},
-    {"matricula":"202503057","nome":"ESDRAS DAMAS MOREIRA"},
-    {"matricula":"202503058","nome":"FILIPE DE OLIVEIRA CORTES"},
-    {"matricula":"202503059","nome":"GABRIEL DOURADO BRANDAO"},
-    {"matricula":"202503068","nome":"JULIA PRUDENTE FERNANDES"},
-    {"matricula":"202503070","nome":"LAURA LACERDA BATISTA"},
-    {"matricula":"202501120","nome":"LUIZ HENRIQUE RIBEIRO BRANDÃO"},
-    {"matricula":"202501121","nome":"NICOLLY DE CASTRO MELO MOURA"}
+  turma_2: [
+    {matricula:"202501115", nome:"ANA CLARA ALVES COSTA"},
+    {matricula:"202505618", nome:"DAVI RODRIGUES MAGALHAES"},
+    {matricula:"202503057", nome:"ESDRAS DAMAS MOREIRA"},
+    {matricula:"202503058", nome:"FILIPE DE OLIVEIRA CORTES"},
+    {matricula:"202503059", nome:"GABRIEL DOURADO BRANDAO"},
+    {matricula:"202503068", nome:"JULIA PRUDENTE FERNANDES"},
+    {matricula:"202503070", nome:"LAURA LACERDA BATISTA"},
+    {matricula:"202501120", nome:"LUIZ HENRIQUE RIBEIRO BRANDÃO"},
+    {matricula:"202501121", nome:"NICOLLY DE CASTRO MELO MOURA"},
   ]
 };
 
-// ─── URL DO BACKEND (Apps Script Web App) ────────────────────────────────────
-// Substitua pela URL gerada ao publicar o Apps Script como Web App
-const BACKEND_URL = "https://script.google.com/macros/s/AKfycby6USVz7-lD2SOwLWly58_7bAiC9psLcXo--DkGP2xCOBjsKHBheeNAhFkSyWOeIRj6/exec";
+const QUINTAS = [
+  "2026-03-05","2026-03-12","2026-03-19","2026-03-26",
+  "2026-04-02","2026-04-09","2026-04-16","2026-04-23","2026-04-30",
+  "2026-05-07","2026-05-14","2026-05-21","2026-05-28",
+  "2026-06-04","2026-06-11","2026-06-18","2026-06-25"
+];
 
-// ─── LÓGICA PRINCIPAL ────────────────────────────────────────────────────────
-const params  = new URLSearchParams(window.location.search);
-const paramDate  = params.get("date");   // ex: 2026-03-05
-const paramTurma = params.get("turma"); // ex: turma_1
+// ─── RECEBE SUBMISSÃO ─────────────────────────────────────────────────────────
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    const { date, turma, matricula, nome, timestamp } = payload;
 
-const selMat  = document.getElementById("sel-matricula");
-const selNome = document.getElementById("sel-nome");
-const btn     = document.getElementById("btn-submit");
-const msgEl   = document.getElementById("msg");
-const spinner = document.getElementById("spinner");
+    if (!date || !turma || !matricula || !nome)
+      return resp({status:"error", message:"Dados incompletos."});
 
-// Validação de data
-function formatDate(d) {
-  const [y,m,day] = d.split("-");
-  const months = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const days = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-  const dt = new Date(y, parseInt(m)-1, parseInt(day));
-  return `${days[dt.getDay()]}, ${day}/${m}/${y}`;
-}
+    const ss  = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const aba = getOrCreate(ss, "respostas");
 
-function todayISO() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth()+1).padStart(2,"0");
-  const d = String(now.getDate()).padStart(2,"0");
-  return `${y}-${m}-${d}`;
-}
-
-function showMsg(text, type) {
-  msgEl.textContent = text;
-  msgEl.className = type;
-  msgEl.style.display = "block";
-}
-
-// Inicialização
-if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
-  document.getElementById("form-area").style.display = "none";
-  document.getElementById("date-badge").style.background = "#fed7d7";
-  document.getElementById("date-badge").style.borderColor = "#fc8181";
-  document.getElementById("date-display").textContent = "QR Code inválido";
-  document.getElementById("turma-display").textContent = "Solicite o QR correto ao professor.";
-} else {
-  document.getElementById("date-display").textContent = formatDate(paramDate);
-  document.getElementById("turma-display").textContent = paramTurma.replace("_"," ").toUpperCase();
-
-  const isToday = (paramDate === todayISO());
-  if (!isToday) {
-    document.getElementById("form-area").style.display = "none";
-    document.getElementById("date-badge").style.background = "#fefcbf";
-    document.getElementById("date-badge").style.borderColor = "#f6e05e";
-    showMsg("⚠️ Este QR Code não é válido hoje. Use o QR Code da aula de hoje.", "warning");
-    msgEl.style.display = "block";
-  } else {
-    // Preenche matrícula
-    const alunos = TURMAS[paramTurma];
-    alunos.forEach(a => {
-      const opt = document.createElement("option");
-      opt.value = a.matricula;
-      opt.textContent = a.matricula;
-      selMat.appendChild(opt);
-    });
-
-    selMat.addEventListener("change", () => {
-      const mat = selMat.value;
-      selNome.innerHTML = '<option value="">— confirme seu nome —</option>';
-      if (mat) {
-        const aluno = alunos.find(a => a.matricula === mat);
-        if (aluno) {
-          const opt = document.createElement("option");
-          opt.value = aluno.nome;
-          opt.textContent = aluno.nome;
-          selNome.appendChild(opt);
-        }
-      }
-      validateForm();
-    });
-
-    selNome.addEventListener("change", validateForm);
-
-    function validateForm() {
-      const mat  = selMat.value;
-      const nome = selNome.value;
-      if (!mat || !nome) { btn.disabled = true; return; }
-      const aluno = TURMAS[paramTurma].find(a => a.matricula === mat);
-      if (!aluno || aluno.nome !== nome) {
-        btn.disabled = true;
-        showMsg("⚠️ Matrícula e nome não coincidem.", "error");
-      } else {
-        btn.disabled = false;
-        msgEl.style.display = "none";
-      }
+    // Verifica duplicata
+    const rows = aba.getDataRange().getValues();
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][1]) === String(matricula) &&
+          String(rows[i][0]) === String(date))
+        return resp({status:"duplicate"});
     }
 
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      spinner.style.display = "block";
-      msgEl.style.display = "none";
+    aba.appendRow([date, matricula, nome, turma, new Date(timestamp), new Date()]);
 
-      const now = new Date();
-      const payload = {
-        date:      paramDate,
-        turma:     paramTurma,
-        matricula: selMat.value,
-        nome:      selNome.value,
-        timestamp: now.toISOString()
-      };
+    // Atualiza planilha de presença imediatamente
+    atualizarPresenca();
 
-      try {
-        const resp = await fetch(BACKEND_URL, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(payload)
-        });
-        const data = await resp.json();
-        spinner.style.display = "none";
-        if (data.status === "ok") {
-          document.getElementById("form-area").style.display = "none";
-          showMsg("✅ Presença registrada com sucesso! Obrigado.", "success");
-        } else if (data.status === "duplicate") {
-          showMsg("ℹ️ Sua presença já foi registrada para hoje.", "warning");
-        } else {
-          showMsg("❌ Erro ao registrar: " + (data.message || "tente novamente."), "error");
-          btn.disabled = false;
-        }
-      } catch(e) {
-        spinner.style.display = "none";
-        showMsg("❌ Sem conexão com o servidor. Verifique sua internet.", "error");
-        btn.disabled = false;
-      }
-    });
+    return resp({status:"ok"});
+  } catch(err) {
+    return resp({status:"error", message:err.message});
   }
 }
-</script>
-</body>
-</html>
+
+function doGet() {
+  return resp({status:"ok", message:"Servidor ativo."});
+}
+
+function resp(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getOrCreate(ss, name) {
+  let s = ss.getSheetByName(name);
+  if (!s) {
+    s = ss.insertSheet(name);
+    if (name === "respostas") {
+      s.appendRow(["data_aula","matricula","nome","turma","timestamp_aluno","timestamp_servidor"]);
+      s.setFrozenRows(1);
+      s.getRange(1,1,1,6)
+       .setBackground("#1a365d").setFontColor("white").setFontWeight("bold");
+    }
+  }
+  return s;
+}
+
+// ─── ATUALIZA PLANILHA DE PRESENÇA ────────────────────────────────────────────
+function atualizarPresenca() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // Lê respostas e agrupa por turma → data → matriculas
+  const rows = getOrCreate(ss, "respostas").getDataRange().getValues();
+  const reg  = {};
+  for (let i = 1; i < rows.length; i++) {
+    const d = String(rows[i][0]).trim();
+    const m = String(rows[i][1]).trim();
+    const t = String(rows[i][3]).trim();
+    if (!d || !m || !t) continue;
+    if (!reg[t])    reg[t]    = {};
+    if (!reg[t][d]) reg[t][d] = new Set();
+    reg[t][d].add(m);
+  }
+
+  ["turma_1","turma_2"].forEach(turma => {
+    const alunos  = ALUNOS[turma];
+    const nomeAba = "presenca_" + turma;
+
+    // Recria aba para garantir dados frescos
+    let aba = ss.getSheetByName(nomeAba);
+    if (aba) ss.deleteSheet(aba);
+    aba = ss.insertSheet(nomeAba);
+
+    // Cabeçalho
+    const cabDatas = QUINTAS.map(dt => {
+      const [,m,d] = dt.split("-");
+      return d+"/"+m;
+    });
+    aba.appendRow(["#","Matrícula","Nome",...cabDatas,"Total Faltas","% Presença"]);
+
+    const nCols = 3 + QUINTAS.length + 2;
+    aba.getRange(1,1,1,nCols)
+       .setBackground("#1a365d").setFontColor("white")
+       .setFontWeight("bold").setHorizontalAlignment("center");
+    aba.setFrozenRows(1);
+    aba.setFrozenColumns(3);
+
+    // Linhas de alunos
+    const bgGrid = [];
+    alunos.forEach((aluno, idx) => {
+      const cells = [];
+      let faltas = 0;
+      let aulasCom = 0;
+
+      QUINTAS.forEach(dt => {
+        const presentes = reg[turma] && reg[turma][dt] ? reg[turma][dt] : new Set();
+        let v;
+        if (presentes.size === 0) {
+          v = 0;           // dispensada
+        } else {
+          aulasCom++;
+          v = presentes.has(aluno.matricula) ? 0 : 2;
+          if (v === 2) faltas++;
+        }
+        cells.push(v);
+      });
+
+      const pct = aulasCom > 0 ? Math.round(((aulasCom - faltas) / aulasCom) * 100) : 100;
+      const rowBg = pct < 75 ? "#fed7d7" : pct < 85 ? "#fefcbf" : null;
+
+      aba.appendRow([idx+1, aluno.matricula, aluno.nome, ...cells, faltas, pct+"%"]);
+
+      // Background da linha inteira se em risco
+      if (rowBg) {
+        aba.getRange(idx+2, 1, 1, nCols).setBackground(rowBg);
+      }
+
+      bgGrid.push(cells.map(v => v === 2 ? "#feb2b2" : "#9ae6b4"));
+    });
+
+    // Coloração individual das células 0/2
+    const dataRange = aba.getRange(2, 4, alunos.length, QUINTAS.length);
+    dataRange.setBackgrounds(bgGrid)
+             .setHorizontalAlignment("center")
+             .setFontWeight("bold");
+
+    // Larguras
+    aba.setColumnWidth(1, 36);
+    aba.setColumnWidth(2, 110);
+    aba.setColumnWidth(3, 260);
+    for (let c = 4; c <= 3+QUINTAS.length; c++) aba.setColumnWidth(c, 50);
+    aba.setColumnWidth(4+QUINTAS.length, 95);
+    aba.setColumnWidth(5+QUINTAS.length, 95);
+  });
+
+  Logger.log("Presença atualizada: " + new Date());
+}
+
+// ─── TRIGGER AUTOMÁTICO ───────────────────────────────────────────────────────
+// Execute esta função UMA VEZ manualmente para ativar atualização horária
+function configurarTrigger() {
+  ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger("atualizarPresenca")
+    .timeBased().everyHours(1).create();
+  Logger.log("Trigger ativado: atualização a cada 1 hora.");
+}
