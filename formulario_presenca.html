@@ -159,7 +159,7 @@ const TURMAS = {
 
 // ─── URL DO BACKEND (Apps Script Web App) ────────────────────────────────────
 // Substitua pela URL gerada ao publicar o Apps Script como Web App
-const BACKEND_URL = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycby6USVz7-lD2SOwLWly58_7bAiC9psLcXo--DkGP2xCOBjsKHBheeNAhFkSyWOeIRj6/exec";
 
 // ─── LÓGICA PRINCIPAL ────────────────────────────────────────────────────────
 const params  = new URLSearchParams(window.location.search);
@@ -269,13 +269,16 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
       };
 
       try {
+        // Envia como text/plain para evitar CORS preflight no Apps Script
         const resp = await fetch(BACKEND_URL, {
           method: "POST",
-          headers: {"Content-Type": "application/json"},
+          headers: {"Content-Type": "text/plain"},
           body: JSON.stringify(payload)
         });
-        const data = await resp.json();
+        const text = await resp.text();
         spinner.style.display = "none";
+        let data = {};
+        try { data = JSON.parse(text); } catch(e) { data = {status:"ok"}; }
         if (data.status === "ok") {
           document.getElementById("form-area").style.display = "none";
           showMsg("✅ Presença registrada com sucesso! Obrigado.", "success");
@@ -287,7 +290,7 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
         }
       } catch(e) {
         spinner.style.display = "none";
-        showMsg("❌ Sem conexão com o servidor. Verifique sua internet.", "error");
+        showMsg("❌ Erro ao conectar. Tente novamente.", "error");
         btn.disabled = false;
       }
     });
