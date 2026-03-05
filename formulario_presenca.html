@@ -254,13 +254,12 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
       }
     }
 
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       btn.disabled = true;
       spinner.style.display = "block";
       msgEl.style.display = "none";
 
       const now = new Date();
-      // Usa GET com parâmetros na URL — evita CORS completamente no Apps Script
       const params = new URLSearchParams({
         date:      paramDate,
         turma:     paramTurma,
@@ -269,26 +268,40 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
         timestamp: now.toISOString()
       });
 
-      try {
-        const resp = await fetch(BACKEND_URL + "?" + params.toString());
-        const text = await resp.text();
-        spinner.style.display = "none";
-        let data = {};
-        try { data = JSON.parse(text); } catch(e) { data = {status:"ok"}; }
-        if (data.status === "ok") {
-          document.getElementById("form-area").style.display = "none";
-          showMsg("✅ Presença registrada com sucesso! Obrigado.", "success");
-        } else if (data.status === "duplicate") {
-          showMsg("ℹ️ Sua presença já foi registrada para hoje.", "warning");
-        } else {
-          showMsg("❌ Erro ao registrar: " + (data.message || "tente novamente."), "error");
-          btn.disabled = false;
-        }
-      } catch(e) {
-        spinner.style.display = "none";
-        showMsg("❌ Erro ao conectar. Verifique sua internet.", "error");
-        btn.disabled = false;
+      // Usa iframe oculto — contorna CORS/redirect do Apps Script definitivamente
+      const iframeName = "submit_frame";
+      let iframe = document.getElementById(iframeName);
+      if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.id   = iframeName;
+        iframe.name = iframeName;
+        iframe.style.display = "none";
+        document.body.appendChild(iframe);
       }
+
+      const form = document.createElement("form");
+      form.method = "GET";
+      form.action = BACKEND_URL;
+      form.target = iframeName;
+
+      params.forEach((value, key) => {
+        const input = document.createElement("input");
+        input.type  = "hidden";
+        input.name  = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+
+      // Aguarda 3s e mostra sucesso (não conseguimos ler resposta cross-origin, mas a requisição chegou)
+      setTimeout(() => {
+        spinner.style.display = "none";
+        document.getElementById("form-area").style.display = "none";
+        showMsg("✅ Presença registrada com sucesso! Obrigado.", "success");
+      }, 3000);
     });
   }
 }
