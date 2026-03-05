@@ -260,21 +260,17 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
       msgEl.style.display = "none";
 
       const now = new Date();
-      const payload = {
+      // Usa GET com parâmetros na URL — evita CORS completamente no Apps Script
+      const params = new URLSearchParams({
         date:      paramDate,
         turma:     paramTurma,
         matricula: selMat.value,
         nome:      selNome.value,
         timestamp: now.toISOString()
-      };
+      });
 
       try {
-        // Envia como text/plain para evitar CORS preflight no Apps Script
-        const resp = await fetch(BACKEND_URL, {
-          method: "POST",
-          headers: {"Content-Type": "text/plain"},
-          body: JSON.stringify(payload)
-        });
+        const resp = await fetch(BACKEND_URL + "?" + params.toString());
         const text = await resp.text();
         spinner.style.display = "none";
         let data = {};
@@ -290,7 +286,7 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
         }
       } catch(e) {
         spinner.style.display = "none";
-        showMsg("❌ Erro ao conectar. Tente novamente.", "error");
+        showMsg("❌ Erro ao conectar. Verifique sua internet.", "error");
         btn.disabled = false;
       }
     });
