@@ -105,7 +105,6 @@
         <option value="">— selecione sua matrícula —</option>
       </select>
     </div>
-
     <div class="field">
       <label for="sel-nome">Nome</label>
       <select id="sel-nome">
@@ -113,7 +112,6 @@
       </select>
       <p class="help">O nome deve coincidir com a matrícula selecionada acima.</p>
     </div>
-
     <button type="submit" id="btn-submit" disabled>Registrar Presença</button>
   </div>
 
@@ -122,51 +120,40 @@
 </div>
 
 <script>
-// ─── DADOS DOS ALUNOS (gerado automaticamente) ───────────────────────────────
 const TURMAS = {
   "turma_1": [
-    {"matricula":"202402786","nome":"ANA LUIZA DA SILVA TEIXEIRA"},
-    {"matricula":"202503053","nome":"BÁRBARA LUIZA CARNEIRO"},
-    {"matricula":"202501117","nome":"EDUARDA SILVA ALVES"},
-    {"matricula":"202503060","nome":"GABRIEL SOARES DO NASCIMENTO MENDES"},
-    {"matricula":"202505619","nome":"GIS LOPES SILVA"},
-    {"matricula":"202503064","nome":"ICARO MENDES DE MORAIS DANNA"},
-    {"matricula":"202302360","nome":"JOAO PEDRO CRUVINEL SOUSA NICOLAU"},
-    {"matricula":"202501119","nome":"JOAO VITOR CAINAN DE SOUZA"},
-    {"matricula":"202402812","nome":"KELLY CRISTINA LORETO FAGUNDES"},
-    {"matricula":"202402813","nome":"LARISSA SILVEIRA PRADO NASCIMENTO"},
-    {"matricula":"202402814","nome":"LAURA LUIZA PAULA BATISTA"},
-    {"matricula":"202503071","nome":"LUANY DOS SANTOS RAMOS"},
-    {"matricula":"202505620","nome":"MARIA LUIZA LEOPOLDINO LADEIRA"},
-    {"matricula":"202503075","nome":"MURILO ASSUNCAO ACACIO"},
-    {"matricula":"202505926","nome":"OSVALDO DE OLIVEIRA GUIMARAES NETO"},
-    {"matricula":"202503079","nome":"ROBERTA FELIPE GOMES"},
-    {"matricula":"202503081","nome":"SARAH CRISTINA DOS SANTOS"},
-    {"matricula":"202503082","nome":"SOFIA LUNARDI GOMES"},
-    {"matricula":"202505622","nome":"VICTORIA SOUSA MOREIRA"}
-  ],
-  "turma_2": [
-    {"matricula":"202501115","nome":"ANA CLARA ALVES COSTA"},
-    {"matricula":"202505618","nome":"DAVI RODRIGUES MAGALHAES"},
-    {"matricula":"202503057","nome":"ESDRAS DAMAS MOREIRA"},
-    {"matricula":"202503058","nome":"FILIPE DE OLIVEIRA CORTES"},
-    {"matricula":"202503059","nome":"GABRIEL DOURADO BRANDAO"},
-    {"matricula":"202503068","nome":"JULIA PRUDENTE FERNANDES"},
-    {"matricula":"202503070","nome":"LAURA LACERDA BATISTA"},
-    {"matricula":"202501120","nome":"LUIZ HENRIQUE RIBEIRO BRANDÃO"},
-    {"matricula":"202503073","nome":"MARIA CLARA COSTA SILVA"},
-    {"matricula":"202501121","nome":"NICOLLY DE CASTRO MELO MOURA"}
+    {"matricula":"202302384","nome":"ALEX PEREIRA DOS SANTOS FILHO"},
+    {"matricula":"202201470","nome":"ANA PAULA SOUZA NASCIMENTO"},
+    {"matricula":"202302402","nome":"EDERSON GONZAGA DE CASTRO LEITE"},
+    {"matricula":"202302403","nome":"EMANUEL VITOR DA SILVA PEREIRA"},
+    {"matricula":"202201487","nome":"EMMILY MACIEL CORRÊA MELO"},
+    {"matricula":"202302405","nome":"ESTEVAO DE ALMEIDA SALLES RAZIA"},
+    {"matricula":"202302406","nome":"FABRICIO GAMA PORTILHO"},
+    {"matricula":"202302412","nome":"GABRIEL PHILLIP RODRIGUES SILVA"},
+    {"matricula":"202402859","nome":"GABRIEL RIBEIRO NUNES"},
+    {"matricula":"202402862","nome":"GUILHERME SANTOS BARBOSA"},
+    {"matricula":"202201498","nome":"GUSTAVO PIRES TEIXEIRA"},
+    {"matricula":"202402875","nome":"JORDANA ARAUJO ANDRADE"},
+    {"matricula":"202009365","nome":"JOYCE DHIAYA SOUSA SIQUEIRA DE JESUS"},
+    {"matricula":"202402877","nome":"KAMILA CUSTODIO VELEDA"},
+    {"matricula":"202201514","nome":"LAURA RIBEIRO MACHADO"},
+    {"matricula":"202402881","nome":"LETICIA FERNANDES DA SILVA"},
+    {"matricula":"202201517","nome":"LUCAS CAMILO BARBOSA"},
+    {"matricula":"202503134","nome":"LUCAS ROCHA SOUZA PAES"},
+    {"matricula":"202201522","nome":"MARIA LUIZA MILHOMEM MACEDO"},
+    {"matricula":"202402899","nome":"NATALIA SANTIAGO DE QUEIROZ"},
+    {"matricula":"202206085","nome":"RAFAELA VIEIRA SOBRINHO"},
+    {"matricula":"202402909","nome":"RAFAEL GOMES DE SOUSA LIMA"},
+    {"matricula":"202204827","nome":"TAIS VIANA CAMPOS"},
+    {"matricula":"202402917","nome":"VITOR MOREIRA CUNHA"}
   ]
 };
 
-// ─── URL DO BACKEND (Apps Script Web App) ────────────────────────────────────
-// Substitua pela URL gerada ao publicar o Apps Script como Web App
 const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyHzno5nJcZ8SXCilJ2ij3s70ND2XcFlQKUwdvTUkQTu6ELShH0aXIYOHF1SPDHf8jqKw/exec";
 
-// ─── LÓGICA PRINCIPAL ────────────────────────────────────────────────────────
-const params  = new URLSearchParams(window.location.search);
-const paramDate  = params.get("date");   // ex: 2026-03-05
-const paramTurma = params.get("turma"); // ex: turma_1
+const params     = new URLSearchParams(window.location.search);
+const paramDate  = params.get("date");
+const paramTurma = params.get("turma");
 
 const selMat  = document.getElementById("sel-matricula");
 const selNome = document.getElementById("sel-nome");
@@ -174,21 +161,17 @@ const btn     = document.getElementById("btn-submit");
 const msgEl   = document.getElementById("msg");
 const spinner = document.getElementById("spinner");
 
-// Validação de data
 function formatDate(d) {
   const [y,m,day] = d.split("-");
   const months = ["","Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const days = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  const days   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   const dt = new Date(y, parseInt(m)-1, parseInt(day));
-  return `${days[dt.getDay()]}, ${day}/${m}/${y}`;
+  return `${days[dt.getDay()]}, ${day}/${months[parseInt(m)]}/${y}`;
 }
 
 function todayISO() {
   const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth()+1).padStart(2,"0");
-  const d = String(now.getDate()).padStart(2,"0");
-  return `${y}-${m}-${d}`;
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
 }
 
 function showMsg(text, type) {
@@ -197,7 +180,6 @@ function showMsg(text, type) {
   msgEl.style.display = "block";
 }
 
-// Inicialização
 if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
   document.getElementById("form-area").style.display = "none";
   document.getElementById("date-badge").style.background = "#fed7d7";
@@ -208,15 +190,13 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
   document.getElementById("date-display").textContent = formatDate(paramDate);
   document.getElementById("turma-display").textContent = paramTurma.replace("_"," ").toUpperCase();
 
-  const isToday = (paramDate === todayISO());
-  if (!isToday) {
+  if (paramDate !== todayISO()) {
     document.getElementById("form-area").style.display = "none";
     document.getElementById("date-badge").style.background = "#fefcbf";
     document.getElementById("date-badge").style.borderColor = "#f6e05e";
     showMsg("⚠️ Este QR Code não é válido hoje. Use o QR Code da aula de hoje.", "warning");
     msgEl.style.display = "block";
   } else {
-    // Preenche matrícula
     const alunos = TURMAS[paramTurma];
     alunos.forEach(a => {
       const opt = document.createElement("option");
@@ -262,7 +242,7 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
       msgEl.style.display = "none";
 
       const now = new Date();
-      const params = new URLSearchParams({
+      const sendParams = new URLSearchParams({
         date:      paramDate,
         turma:     paramTurma,
         matricula: selMat.value,
@@ -270,13 +250,11 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
         timestamp: now.toISOString()
       });
 
-      // Usa iframe oculto — contorna CORS/redirect do Apps Script definitivamente
       const iframeName = "submit_frame";
       let iframe = document.getElementById(iframeName);
       if (!iframe) {
         iframe = document.createElement("iframe");
-        iframe.id   = iframeName;
-        iframe.name = iframeName;
+        iframe.id = iframe.name = iframeName;
         iframe.style.display = "none";
         document.body.appendChild(iframe);
       }
@@ -285,20 +263,17 @@ if (!paramDate || !paramTurma || !TURMAS[paramTurma]) {
       form.method = "GET";
       form.action = BACKEND_URL;
       form.target = iframeName;
-
-      params.forEach((value, key) => {
+      sendParams.forEach((value, key) => {
         const input = document.createElement("input");
-        input.type  = "hidden";
-        input.name  = key;
+        input.type = "hidden";
+        input.name = key;
         input.value = value;
         form.appendChild(input);
       });
-
       document.body.appendChild(form);
       form.submit();
       document.body.removeChild(form);
 
-      // Aguarda 3s e mostra sucesso (não conseguimos ler resposta cross-origin, mas a requisição chegou)
       setTimeout(() => {
         spinner.style.display = "none";
         document.getElementById("form-area").style.display = "none";
